@@ -21,6 +21,9 @@ services:
       - OVERLAP_MAX=40
       - N_SIMULATIONS=100000
       - RANDOM_SEED=42
+      - SCHEDULE_INGEST_CRON=0 10 * * *
+      - SCHEDULE_TRAIN_CRON=30 10 * * *
+      - SCHEDULE_PREDICT_CRON=0 11 * * *
     ports:
       - "8000:8000"
   ui:
