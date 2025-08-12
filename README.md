@@ -1,3 +1,9 @@
+---
+license: mit
+title: Lotomania
+sdk: docker
+emoji: 🚀
+---
 # Lotomania – Sistema de Previsão, Geração de Jogos e Backtest (1999–2025)
 
 Este projeto implementa um sistema automatizado, robusto e auditável para ingestão de dados da Lotomania, treinamento de modelos (ensemble), geração de até 3 jogos (50 números cada), simulação Monte-Carlo e backtest cronológico, com API (FastAPI) e dashboard (Streamlit).
