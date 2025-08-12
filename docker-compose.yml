@@ -1,0 +1,39 @@
+version: "3.9"
+services:
+  mongo:
+    image: mongo:6
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+  api:
+    build: .
+    depends_on:
+      - mongo
+    environment:
+      - MONGO_URI=mongodb://mongo:27017
+      - DB_NAME=lotomania
+      - THRESHOLD_P_GE_18=0.02
+      - THRESHOLD_P_GE_17=0.10
+      - THRESHOLD_P_GE_16=0.50
+      - CANDIDATE_POOL_SIZE=80
+      - OVERLAP_MAX=40
+      - N_SIMULATIONS=100000
+      - RANDOM_SEED=42
+    ports:
+      - "8000:8000"
+  ui:
+    build: .
+    depends_on:
+      - api
+      - mongo
+    command: streamlit run src/ui_streamlit.py --server.port 8501 --server.address 0.0.0.0
+    environment:
+      - MONGO_URI=mongodb://mongo:27017
+      - DB_NAME=lotomania
+      - API_URL=http://api:8000
+    ports:
+      - "8501:8501"
+volumes:
+  mongo_data:
