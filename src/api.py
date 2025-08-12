@@ -6,10 +6,25 @@ from typing import Any, Dict
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-from .db import get_latest_prediction, insert_prediction
+from .db import get_latest_prediction
 from .predict import run_prediction
+from .scheduler import create_scheduler
 
 app = FastAPI(title="Lotomania Predictor", version="0.1.0")
+
+scheduler = create_scheduler()
+
+
+@app.on_event("startup")
+async def _on_startup() -> None:
+    if not scheduler.running:
+        scheduler.start()
+
+
+@app.on_event("shutdown")
+async def _on_shutdown() -> None:
+    if scheduler.running:
+        scheduler.shutdown(wait=False)
 
 
 class PredictRequest(BaseModel):
