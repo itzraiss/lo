@@ -20,6 +20,7 @@ from models.ensemble_models import ensemble_model
 from optimization.ticket_optimizer import ticket_optimizer
 from simulation.monte_carlo import monte_carlo_simulator
 from utils.logger import loto_logger
+from sample_data import SAMPLE_PREDICTION, generate_sample_contests
 
 # Configurar página
 st.set_page_config(
@@ -40,7 +41,8 @@ if 'app_state' not in st.session_state:
         'background_thread': None,
         'auto_mode': True,
         'connected_to_db': False,
-        'models_trained': False
+        'models_trained': False,
+        'demo_mode': False
     }
 
 class LotomaniaApp:
@@ -304,6 +306,21 @@ def main():
                     st.error("Erro no ciclo de predição")
                 st.rerun()
         
+        # Modo Demo
+        st.header("🎬 Modo Demonstração")
+        if st.button("🎯 Ver Demo", help="Mostra exemplo de funcionamento do sistema"):
+            st.session_state.app_state['demo_mode'] = True
+            st.session_state.app_state['last_prediction'] = SAMPLE_PREDICTION
+            st.session_state.app_state['last_update'] = datetime.now()
+            st.success("Modo demo ativado!")
+            st.rerun()
+        
+        if st.button("❌ Sair do Demo", disabled=not st.session_state.app_state['demo_mode']):
+            st.session_state.app_state['demo_mode'] = False
+            st.session_state.app_state['last_prediction'] = None
+            st.info("Modo demo desativado!")
+            st.rerun()
+        
         # Configurações
         st.header("📊 Informações")
         st.metric("Ciclos Executados", st.session_state.app_state['cycle_count'])
@@ -318,21 +335,28 @@ def main():
         st.write("🤖 Modelos:", "✅ Treinados" if st.session_state.app_state['models_trained'] else "❌ Não treinados")
     
     # Área principal
-    if not st.session_state.app_state['system_running']:
+    if st.session_state.app_state['demo_mode'] or st.session_state.app_state['last_prediction']:
+        # Mostrar resultados (demo ou real)
+        if st.session_state.app_state['demo_mode']:
+            st.info("🎬 **MODO DEMONSTRAÇÃO** - Este é um exemplo de como o sistema funciona")
+        show_prediction_results()
+        
+    elif not st.session_state.app_state['system_running']:
         st.info("🚀 Clique em 'Inicializar' na barra lateral para começar o sistema automatizado!")
         
         # Instruções
         st.markdown("""
         ## 📋 Como usar o sistema:
         
-        1. **Inicializar**: Clique no botão 'Inicializar' para conectar ao banco de dados e treinar os modelos
-        2. **Funcionamento Automático**: O sistema irá automaticamente:
+        1. **Demonstração**: Clique em "🎯 Ver Demo" na barra lateral para ver exemplo de funcionamento
+        2. **Inicializar**: Clique no botão 'Inicializar' para conectar ao banco de dados e treinar os modelos
+        3. **Funcionamento Automático**: O sistema irá automaticamente:
            - Verificar novos concursos da API da Caixa a cada 6 horas
            - Retreinar modelos quando necessário
            - Gerar predições com 90-95% de confiança
            - Otimizar 3 jogos de 50 números cada
            - Simular probabilidades de acerto
-        3. **Monitoramento**: Acompanhe o status em tempo real na barra lateral
+        4. **Monitoramento**: Acompanhe o status em tempo real na barra lateral
         
         ## 🎯 Critérios de Confiança:
         - **18+ acertos**: ≥ 2% de probabilidade
@@ -340,23 +364,27 @@ def main():
         - **16+ acertos**: ≥ 50% de probabilidade
         
         O sistema só emitirá recomendações quando pelo menos um critério for atendido.
+        
+        ## 🛠️ Configuração Necessária:
+        
+        Para usar o sistema completo, você precisa:
+        1. **MongoDB**: Configure a variável `MONGODB_URI` nos secrets do HF Spaces
+        2. **Dados Históricos**: Faça upload do arquivo `results.xlsx` com dados da Lotomania
+        3. **Recursos**: O sistema usa otimizações para funcionar no tier gratuito (2 vCPU + 16GB RAM)
         """)
         
     else:
-        # Sistema em funcionamento - mostrar resultados
-        if st.session_state.app_state['last_prediction']:
-            show_prediction_results()
-        else:
-            st.info("⏳ Sistema em funcionamento. Aguardando primeiro ciclo de predição...")
-            
-            # Progress bar simulado
-            progress_bar = st.progress(0)
-            status_text = st.empty()
-            
-            for i in range(100):
-                progress_bar.progress(i + 1)
-                status_text.text(f"Processando... {i+1}%")
-                time.sleep(0.1)
+        # Sistema em funcionamento - aguardando resultados
+        st.info("⏳ Sistema em funcionamento. Aguardando primeiro ciclo de predição...")
+        
+        # Progress bar simulado
+        progress_bar = st.progress(0)
+        status_text = st.empty()
+        
+        for i in range(100):
+            progress_bar.progress(i + 1)
+            status_text.text(f"Processando... {i+1}%")
+            time.sleep(0.1)
 
 def show_prediction_results():
     """Exibe resultados da última predição"""
