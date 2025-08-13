@@ -25,12 +25,17 @@ def get_env_or_secret(key: str, default: str = None) -> str:
             pass
     
     return value
+from dotenv import load_dotenv
+
+load_dotenv()
 
 @dataclass
 class DatabaseConfig:
     """Configurações do banco de dados"""
     uri: str = get_env_or_secret("MONGODB_URI", "mongodb://localhost:27017/")
     db_name: str = get_env_or_secret("MONGODB_DB", "lotomania")
+    uri: str = os.getenv("MONGODB_URI", "mongodb://localhost:27017/")
+    db_name: str = os.getenv("MONGODB_DB", "lotomania")
     
     # Collections
     contests_collection: str = "contests"
