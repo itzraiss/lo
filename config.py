@@ -1,6 +1,30 @@
 import os
 from typing import Dict, List
 from dataclasses import dataclass
+
+# Tentar carregar dotenv se disponível
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
+# Suporte para Streamlit secrets
+def get_env_or_secret(key: str, default: str = None) -> str:
+    """Busca variável de ambiente ou Streamlit secret"""
+    # Primeiro tenta variável de ambiente
+    value = os.getenv(key, default)
+    
+    # Se não encontrou, tenta Streamlit secrets
+    if value is None or value == default:
+        try:
+            import streamlit as st
+            if hasattr(st, 'secrets') and key in st.secrets:
+                value = st.secrets[key]
+        except ImportError:
+            pass
+    
+    return value
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -8,6 +32,8 @@ load_dotenv()
 @dataclass
 class DatabaseConfig:
     """Configurações do banco de dados"""
+    uri: str = get_env_or_secret("MONGODB_URI", "mongodb://localhost:27017/")
+    db_name: str = get_env_or_secret("MONGODB_DB", "lotomania")
     uri: str = os.getenv("MONGODB_URI", "mongodb://localhost:27017/")
     db_name: str = os.getenv("MONGODB_DB", "lotomania")
     
